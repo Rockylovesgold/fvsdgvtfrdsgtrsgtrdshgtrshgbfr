@@ -4,6 +4,7 @@
     "slug": "big-cup-club",
     "scheme": "bigcupclub",
     "version": "1.0.0",
-    "orientation": "portrait"
+    "orientation": "portrait",
+    "platforms": ["ios", "android"]
   }
 }
