@@ -10,6 +10,7 @@
     "db:migrate": "pnpm --filter @bigcup/api exec -- prisma migrate dev",
     "db:seed": "pnpm --filter @bigcup/api exec -- tsx prisma/seed.ts",
     "build": "turbo run build",
+    "build:web": "turbo run build --filter=@bigcup/demo --filter=@bigcup/admin-web --filter=@bigcup/partner-web",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test"
