@@ -15,7 +15,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Suspense fallback={<header className="h-16 border-b border-espresso/10 bg-oat/90 backdrop-blur-sm" />}>
           <ModeSwitcher />
         </Suspense>
-        <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 lg:px-8">{children}</div>
+        <Suspense fallback={<div className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 lg:px-8 min-h-[50vh]" />}>
+          <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 lg:px-8">{children}</div>
+        </Suspense>
       </body>
     </html>
   );
