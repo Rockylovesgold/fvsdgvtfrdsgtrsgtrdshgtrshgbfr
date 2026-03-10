@@ -1,0 +1,9 @@
+{
+  "expo": {
+    "name": "Big Cup Club",
+    "slug": "big-cup-club",
+    "scheme": "bigcupclub",
+    "version": "1.0.0",
+    "orientation": "portrait"
+  }
+}

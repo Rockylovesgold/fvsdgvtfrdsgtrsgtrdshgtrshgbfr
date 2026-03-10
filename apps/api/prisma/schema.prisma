@@ -1,0 +1,262 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  OWNER
+  MANAGER
+  STAFF
+  ADMIN
+  FINANCE_ADMIN
+  SUPPORT_ADMIN
+  MARKETING_ADMIN
+  SUPER_ADMIN
+}
+
+enum CoffeeShopStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELED
+}
+
+enum TransactionType {
+  CUP_REDEEMED
+  SUBSCRIPTION_PAYMENT
+  REFUND
+}
+
+enum OrderStatus {
+  NEW
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+model User {
+  id              String         @id @default(cuid())
+  email           String         @unique
+  passwordHash    String?
+  fullName        String
+  role            UserRole
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  coffeeShops     CoffeeShop[]   @relation("CoffeeShopOwner")
+  subscriptions   Subscription[]
+  redemptions     Redemption[]   @relation("CustomerRedemptions")
+  processedOrders Redemption[]   @relation("OwnerProcessedRedemptions")
+  transactions    Transaction[]
+  qrTokens        QrToken[]
+  passwordResets  PasswordResetToken[]
+  orders          Order[]
+  staffMemberships StaffMembership[]
+  supportTickets  SupportTicket[] @relation("UserSupportTickets")
+  adminSupportTickets SupportTicket[] @relation("AdminSupportTickets")
+  notifications   Notification[]
+}
+
+model SubscriptionPlan {
+  id              String         @id @default(cuid())
+  name            String         @unique
+  cupsPerMonth    Int
+  priceMinor      Int
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  subscriptions   Subscription[]
+}
+
+model Subscription {
+  id                    String             @id @default(cuid())
+  userId                String
+  user                  User               @relation(fields: [userId], references: [id])
+  subscriptionPlanId    String
+  subscriptionPlan      SubscriptionPlan   @relation(fields: [subscriptionPlanId], references: [id])
+  status                SubscriptionStatus
+  cupsRemaining         Int
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  currentPeriodStart    DateTime?
+  currentPeriodEnd      DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  @@index([userId, status])
+}
+
+model CoffeeShop {
+  id              String            @id @default(cuid())
+  name            String
+  ownerId         String
+  owner           User              @relation("CoffeeShopOwner", fields: [ownerId], references: [id])
+  status          CoffeeShopStatus  @default(PENDING)
+  address         String
+  lat             Float?
+  lng             Float?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  redemptions     Redemption[]
+  orders          Order[]
+  staffMemberships StaffMembership[]
+  supportTickets  SupportTicket[]
+}
+
+model QrToken {
+  id          String      @id @default(cuid())
+  token       String      @unique @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  expiresAt   DateTime
+  isUsed      Boolean     @default(false)
+  usedAt      DateTime?
+  createdAt   DateTime    @default(now())
+  redemption  Redemption?
+
+  @@index([userId, expiresAt])
+}
+
+model Redemption {
+  id                  String      @id @default(cuid())
+  userId              String
+  user                User        @relation("CustomerRedemptions", fields: [userId], references: [id])
+  coffeeShopId        String
+  coffeeShop          CoffeeShop  @relation(fields: [coffeeShopId], references: [id])
+  qrTokenId           String      @unique
+  qrToken             QrToken     @relation(fields: [qrTokenId], references: [id])
+  processedByOwnerId  String?
+  processedByOwner    User?       @relation("OwnerProcessedRedemptions", fields: [processedByOwnerId], references: [id])
+  createdAt           DateTime    @default(now())
+  transaction         Transaction?
+
+  @@index([coffeeShopId, createdAt])
+}
+
+model Transaction {
+  id            String           @id @default(cuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id])
+  redemptionId  String?          @unique
+  redemption    Redemption?      @relation(fields: [redemptionId], references: [id])
+  type          TransactionType
+  amountMinor   Int
+  createdAt     DateTime         @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  coffeeShopId  String
+  coffeeShop    CoffeeShop  @relation(fields: [coffeeShopId], references: [id])
+  status        OrderStatus @default(NEW)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([coffeeShopId, status])
+  @@index([userId, createdAt])
+}
+
+model Reward {
+  id          String      @id @default(cuid())
+  userId      String
+  title       String
+  points      Int
+  createdAt   DateTime    @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Campaign {
+  id          String      @id @default(cuid())
+  name        String
+  startsAt    DateTime
+  endsAt      DateTime
+  status      String      @default("DRAFT")
+  audience    String?
+  createdAt   DateTime    @default(now())
+}
+
+model AdminLog {
+  id          String      @id @default(cuid())
+  adminId     String
+  action      String
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+
+  @@index([adminId, createdAt])
+}
+
+model StripeWebhookEvent {
+  id             String      @id @default(cuid())
+  stripeEventId  String      @unique
+  type           String
+  createdAt      DateTime    @default(now())
+}
+
+model StaffMembership {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  coffeeShopId String
+  coffeeShop   CoffeeShop @relation(fields: [coffeeShopId], references: [id])
+  role         UserRole
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([userId, coffeeShopId])
+  @@index([coffeeShopId, role])
+}
+
+model SupportTicket {
+  id            String      @id @default(cuid())
+  userId        String?
+  user          User?       @relation("UserSupportTickets", fields: [userId], references: [id])
+  coffeeShopId  String?
+  coffeeShop    CoffeeShop? @relation(fields: [coffeeShopId], references: [id])
+  assignedAdminId String?
+  assignedAdmin User?       @relation("AdminSupportTickets", fields: [assignedAdminId], references: [id])
+  status        String      @default("NEW")
+  priority      String      @default("NORMAL")
+  subject       String
+  description   String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([status, priority, createdAt])
+}
+
+model Notification {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  channel     String
+  title       String
+  body        String
+  isRead      Boolean   @default(false)
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, isRead, createdAt])
+}
+
+model PasswordResetToken {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  token       String    @unique @default(cuid())
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+}

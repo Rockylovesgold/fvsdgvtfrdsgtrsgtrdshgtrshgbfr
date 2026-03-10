@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --focus-ring: rgba(196, 122, 58, 0.45);
+}
+
+body {
+  background: #f6f1eb;
+  color: #2b1e1a;
+  font-family: Inter, sans-serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
