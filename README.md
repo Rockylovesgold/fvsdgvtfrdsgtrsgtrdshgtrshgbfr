@@ -196,7 +196,21 @@ The dashboards call the API using `NEXT_PUBLIC_API_URL` (see `apps/admin-web/.en
 
 ## Deployment Architecture
 
-- `apps/admin-web` and `apps/partner-web` deploy to Vercel.
+- `apps/demo`, `apps/admin-web`, and `apps/partner-web` deploy to Vercel.
 - `apps/api` deploys to AWS ECS/Fargate (or EKS) with RDS PostgreSQL + ElastiCache Redis.
 - Media assets use S3.
 - Stripe webhooks routed to API public endpoint.
+
+### Vercel deployment (monorepo)
+
+To deploy the demo app (or another Next.js app) to Vercel:
+
+1. Import the repo in Vercel and create a project.
+2. In **Project Settings → Build & Deployment → Root Directory**, set **Root Directory** to:
+   - `apps/demo` (for the unified demo) — recommended
+   - `apps/admin-web` (for the admin dashboard)
+   - `apps/partner-web` (for the partner dashboard)
+3. Leave **Build Command** and **Output Directory** on their defaults (Vercel will detect Next.js).
+4. Ensure `NEXT_PUBLIC_API_URL` is set in Environment Variables if the frontend needs the API.
+
+For multiple apps, create separate Vercel projects, each with its own Root Directory pointing to one of the app folders.

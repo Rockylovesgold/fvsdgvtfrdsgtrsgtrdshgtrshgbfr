@@ -11,6 +11,9 @@
     "db:seed": "pnpm --filter @bigcup/api exec -- tsx prisma/seed.ts",
     "build": "turbo run build",
     "build:web": "turbo run build --filter=@bigcup/demo --filter=@bigcup/admin-web --filter=@bigcup/partner-web",
+    "build:demo": "turbo run build --filter=@bigcup/demo",
+    "build:admin": "turbo run build --filter=@bigcup/admin-web",
+    "build:partner": "turbo run build --filter=@bigcup/partner-web",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test"
